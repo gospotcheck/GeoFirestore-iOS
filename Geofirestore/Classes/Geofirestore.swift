@@ -181,7 +181,7 @@ public enum GFSEventType {
 
 
 public typealias GFSQueryResultBlock = (String?, CLLocation?) -> Void
-public typealias GFSReadyBlock = () -> Void
+public typealias GFSReadyBlock = (QuerySnapshot?) -> Void
 public typealias GFSQueryHandle = UInt
 
 internal class GFSGeoHashQueryListener {
@@ -368,11 +368,11 @@ public class GFSQuery {
         }
     }
     
-    internal func checkAndFireReadyEvent() {
+    internal func checkAndFireReadyEvent(snapshot: QuerySnapshot?) {
         if outstandingQueries.count == 0 {
             for (offset: _, element: (key: _, value: block)) in readyObservers.enumerated() {
                 self.geoFirestore.callbackQueue.async {
-                    block()
+                    block(snapshot)
                 }
             }
         }
@@ -451,7 +451,7 @@ public class GFSQuery {
                         let lockQueue = DispatchQueue(label: "self")
                         lockQueue.sync {
                             while let elementIndex = self.outstandingQueries.index(of: query) { self.outstandingQueries.remove(at: elementIndex) }
-                            self.checkAndFireReadyEvent()
+                            self.checkAndFireReadyEvent(snapshot: snapshot)
                         }
                     }
                 }
@@ -472,7 +472,7 @@ public class GFSQuery {
             }
         }
         for k in oldLocations { locationInfos.removeValue(forKey: k) }
-        checkAndFireReadyEvent()
+        checkAndFireReadyEvent(snapshot: nil)
     }
     
     internal func reset() {
@@ -580,7 +580,7 @@ public class GFSQuery {
             }
             if self.outstandingQueries.count == 0{
                 self.geoFirestore.callbackQueue.async {
-                    block()
+                    block(nil)
                 }
             }
             
