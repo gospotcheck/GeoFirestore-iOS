@@ -231,11 +231,14 @@ public class GFSQuery {
         self.reset()
     }
     
+    var queryToLog: String?
+    
     internal func fireStoreQueryForGeoHashQuery(query: GFGeoHashQuery) -> Query {
         var query = self.geoFirestore.collectionRef.order(by: "g").whereField("g", isGreaterThanOrEqualTo: query.startValue).whereField("g", isLessThanOrEqualTo: query.endValue)
         if let limit = self.searchLimit {
             query = query.limit(to: limit)
         }
+        queryToLog = query.description
         return query
     }
     
